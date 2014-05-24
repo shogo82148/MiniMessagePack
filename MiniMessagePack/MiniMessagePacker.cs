@@ -49,6 +49,7 @@ namespace MiniMessagePack
 		}
 
 		public void Pack(Stream s, object o) {
+			IDictionary asDict;
 			string asStr;
 			IList asList;
 			if (o == null)
@@ -57,6 +58,8 @@ namespace MiniMessagePack
 				Pack (s, asStr);
 			else if ((asList = o as IList) != null)
 				Pack (s, asList);
+			else if ((asDict = o as IDictionary) != null)
+				Pack (s, asDict);
 			else if (o is bool)
 				Pack (s, (bool)o);
 			else if (o is sbyte)
@@ -98,6 +101,23 @@ namespace MiniMessagePack
 			}
 			foreach (object o in list) {
 				Pack (s, o);
+			}
+		}
+
+		private void Pack (Stream s, IDictionary dict) {
+			int count = dict.Count;
+			if (count < 16) {
+				s.WriteByte ((byte)(0x80 + count));
+			} else if (count < 0x10000) {
+				s.WriteByte (0xde);
+				Write (s, (ushort)count);
+			} else {
+				s.WriteByte (0xdf);
+				Write (s, (uint)count);
+			}
+			foreach (object key in dict.Keys) {
+				Pack (s, key);
+				Pack (s, dict [key]);
 			}
 		}
 
