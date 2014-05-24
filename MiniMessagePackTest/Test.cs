@@ -413,6 +413,23 @@ namespace MiniMessagePackTest
 			}
 		}
 
+		private class MyClass
+		{
+			public override string ToString ()
+			{
+				return "a";
+			}
+		}
+
+		[Test()]
+		public void PackKnownObject() {
+			var packer = new MiniMessagePacker ();
+			var actual = packer.Pack ( new MyClass() );
+			Assert.AreEqual (2, actual.Length);
+			Assert.AreEqual (0xa1, actual[0]);
+			Assert.AreEqual (0x61, actual[1]);
+		}
+
 		[Test ()]
 		[TestCase(0,   new byte[] {0x00}, "min positive fixed int")]
 		[TestCase(127, new byte[] {0x7f}, "max positive fixed int")]

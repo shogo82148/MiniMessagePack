@@ -82,6 +82,8 @@ namespace MiniMessagePack
 				Pack (s, (float)o);
 			else if (o is double)
 				Pack (s, (double)o);
+			else
+				Pack (s, o.ToString ());
 		}
 
 		private void PackNull(Stream s) {
