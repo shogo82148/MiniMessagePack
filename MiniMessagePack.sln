@@ -21,6 +21,6 @@ Global
 		{FD1559AB-AF58-4EE5-8C51-3D00E520C1E5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
-		StartupItem = MiniMessagePack\MiniMessagePack.csproj
+		StartupItem = MiniMessagePackTest\MiniMessagePackTest.csproj
 	EndGlobalSection
 EndGlobal
