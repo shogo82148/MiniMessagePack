@@ -146,6 +146,16 @@ namespace MiniMessagePackTest
 				Assert.AreEqual (values [i], actual [keys[i]], message + "[" + keys[i] + "]");
 			}
 		}
+
+		[Test()]
+		[TestCase( false, new byte[] { 0xc2 })]
+		[TestCase( true,  new byte[] { 0xc3 })]
+		public void BooleanValues(bool expected, byte[] data)
+		{
+			var packer = new MiniMessagePacker ();
+			var actual = (bool)packer.Unpack (data);
+			Assert.AreEqual (expected, actual);
+		}
 	}
 }
 
