@@ -586,6 +586,51 @@ namespace MiniMessagePackTest
 			var actual = packer.Unpack (new byte[] { 0xc0 });
 			Assert.AreEqual (null, actual);
 		}
+
+		[Test()]
+		public void UnpackExample()
+		{
+			// it means {"compact":true,"schema":0} in JSON
+			var msgpack = new byte[] {
+				0x82, 0xa7, 0x63, 0x6f, 0x6d, 0x70, 0x61, 0x63, 0x74, 0xc3,
+				0xa6, 0x73, 0x63, 0x68, 0x65, 0x6d, 0x61, 0x00
+			};
+
+			var packer = new MiniMessagePacker ();
+			object unpacked_data = packer.Unpack (msgpack);
+			/*
+			 * unpacked_data = new Dictionary<string, object> {
+			 *     { "compact", true },
+			 *     { "schema", 0},
+			 * };
+			*/
+			var dict = (Dictionary<string, object>)unpacked_data;
+			Assert.IsTrue ((bool)dict ["compact"]);
+			Assert.AreEqual (0, (long)dict ["schema"]);
+		}
+
+		[Test()]
+		public void PackExample()
+		{
+			var unpacked_data = new SortedDictionary<string, object> {
+				{ "compact", true },
+				{ "schema", 0},
+			};
+
+			var packer = new MiniMessagePacker ();
+			byte[] msgpack = packer.Pack (unpacked_data);
+
+			// it means {"compact":true,"schema":0} in JSON
+			var expected = new byte[] {
+				0x82, 0xa7, 0x63, 0x6f, 0x6d, 0x70, 0x61, 0x63, 0x74, 0xc3,
+				0xa6, 0x73, 0x63, 0x68, 0x65, 0x6d, 0x61, 0x00
+			};
+
+			Assert.AreEqual (expected.Length, msgpack.Length);
+			for(int i = 0; i < expected.Length; i++) {
+				Assert.AreEqual (expected [i], msgpack [i]);
+			}
+		}
 	}
 }
 
