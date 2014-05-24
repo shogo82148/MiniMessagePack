@@ -1,6 +1,7 @@
 ﻿using NUnit.Framework;
 using System;
 using MiniMessagePack;
+using System.Collections.Generic;
 
 namespace MiniMessagePackTest
 {
@@ -108,6 +109,27 @@ namespace MiniMessagePackTest
 			var actual = packer.Unpack (data);
 			Assert.AreEqual (actual.GetType (), typeof(string));
 			Assert.AreEqual (expected, actual, message);
+		}
+
+		[Test()]
+		[TestCase( new object[] {},       new byte[]{ 0x90 }, "fixed array")]
+		[TestCase( new object[] { 1 },    new byte[]{ 0x91, 0x01 }, "fixed array")]
+		[TestCase( new object[] { 1, 2 }, new byte[]{ 0x92, 0x01, 0x02 }, "fixed array")]
+		[TestCase( new object[] {},       new byte[]{ 0xdc, 0x00, 0x00 }, "array16")]
+		[TestCase( new object[] { 1 },    new byte[]{ 0xdc, 0x00, 0x01, 0x01 }, "array16")]
+		[TestCase( new object[] { 1, 2 }, new byte[]{ 0xdc, 0x00, 0x02, 0x01, 0x02 }, "array16")]
+		[TestCase( new object[] {},       new byte[]{ 0xdd, 0x00, 0x00, 0x00, 0x00 }, "array32")]
+		[TestCase( new object[] { 1 },    new byte[]{ 0xdd, 0x00, 0x00, 0x00, 0x01, 0x01 }, "array32")]
+		[TestCase( new object[] { 1, 2 }, new byte[]{ 0xdd, 0x00, 0x00, 0x00, 0x02, 0x01, 0x02 }, "array32")]
+		public void ArrayValues(object[] expected, byte[] data, string message)
+		{
+			var packer = new MiniMessagePacker ();
+			var actual = packer.Unpack (data) as List<object>;
+			Assert.AreNotEqual (actual, null, message + ": type");
+			Assert.AreEqual (expected.Length, actual.Count, message + ": count");
+			for (int i = 0; i < expected.Length; i++) {
+				Assert.AreEqual (expected [i], actual [i], message + "[" + i + "]");
+			}
 		}
 	}
 }
