@@ -94,7 +94,7 @@ namespace MiniMessagePack
 				if (s.Read (tmp0, 0, 4) != 4) { 
 					throw new FormatException ();
 				}
-				return ((long)unchecked((sbyte)tmp0[0]) << 24) | ((long)tmp0[1] << 16) | ((long)tmp0[3] << 8) | (long)tmp0[4];
+				return ((long)unchecked((sbyte)tmp0[0]) << 24) | ((long)tmp0[1] << 16) | ((long)tmp0[2] << 8) | (long)tmp0[3];
 			case 0xd3: // int64
 				if (s.Read (tmp0, 0, 8) != 8) { 
 					throw new FormatException ();
@@ -165,7 +165,7 @@ namespace MiniMessagePack
 			if (s.Read (tmp0, 0, 4) != 4) { 
 				throw new FormatException ();
 			}
-			return ((long)tmp0[0] << 24) | ((long)tmp0[1] << 16) | ((long)tmp0[3] << 8) | (long)tmp0[4];
+			return ((long)tmp0[0] << 24) | ((long)tmp0[1] << 16) | ((long)tmp0[2] << 8) | (long)tmp0[3];
 		}
 
 		private string UnpackString(Stream s, long len) {
