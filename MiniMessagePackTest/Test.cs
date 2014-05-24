@@ -2,6 +2,7 @@
 using System;
 using MiniMessagePack;
 using System.Collections.Generic;
+using System.Text;
 
 namespace MiniMessagePackTest
 {
@@ -232,6 +233,95 @@ namespace MiniMessagePackTest
 			Assert.AreEqual (expected.Length, actual.Length, value + ": length");
 			for (int i = 0; i < expected.Length; i++) {
 				Assert.AreEqual (expected [i], actual [i], value + ": [" + i + "]");
+			}
+		}
+
+		[Test()]
+		[TestCase("",    new byte[] { 0xa0 })]
+		[TestCase("a",   new byte[] { 0xa1, 0x61 })]
+		[TestCase("bc",  new byte[] { 0xa2, 0x62, 0x63 })]
+		[TestCase("123456789abcdef", new byte[] { 0xaf, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66 })]
+		[TestCase("0123456789abcdef", new byte[] { 0xd9, 0x10, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66 })]
+		[TestCase("\u3042", new byte[] {0xa3, 0xe3, 0x81, 0x82})]
+		public void PackString(string value, byte[] expected) {
+			var packer = new MiniMessagePacker ();
+			var actual = packer.Pack (value);
+			Assert.AreEqual (expected.Length, actual.Length, value + ": length");
+			for (int i = 0; i < expected.Length; i++) {
+				Assert.AreEqual (expected [i], actual [i], value + ": [" + i + "]");
+			}
+		}
+
+		[Test()]
+		public void PackString255() {
+			var str = new StringBuilder ();
+			for (int i = 0; i < 255; i++) {
+				str.Append ("a");
+			}
+
+			var packer = new MiniMessagePacker ();
+			var actual = packer.Pack (str.ToString());
+			Assert.AreEqual (str.Length + 2, actual.Length);
+			Assert.AreEqual (0xd9, actual [0]);
+			Assert.AreEqual (0xff, actual [1]);
+			for (int i = 0; i < str.Length; i++) {
+				Assert.AreEqual (0x61, actual [i + 2]);
+			}
+		}
+
+		[Test()]
+		public void PackString256() {
+			var str = new StringBuilder ();
+			for (int i = 0; i < 256; i++) {
+				str.Append ("a");
+			}
+
+			var packer = new MiniMessagePacker ();
+			var actual = packer.Pack (str.ToString());
+			Assert.AreEqual (str.Length + 1 + 2, actual.Length);
+			Assert.AreEqual (0xda, actual [0]);
+			Assert.AreEqual (0x01, actual [1]);
+			Assert.AreEqual (0x00, actual [2]);
+			for (int i = 0; i < str.Length; i++) {
+				Assert.AreEqual (0x61, actual [i + 1 + 2]);
+			}
+		}
+
+		[Test()]
+		public void PackString65535() {
+			var str = new StringBuilder ();
+			for (int i = 0; i < 65535; i++) {
+				str.Append ("a");
+			}
+
+			var packer = new MiniMessagePacker ();
+			var actual = packer.Pack (str.ToString());
+			Assert.AreEqual (str.Length + 1 + 2, actual.Length);
+			Assert.AreEqual (0xda, actual [0]);
+			Assert.AreEqual (0xff, actual [1]);
+			Assert.AreEqual (0xff, actual [2]);
+			for (int i = 0; i < str.Length; i++) {
+				Assert.AreEqual (0x61, actual [i + 1 + 2]);
+			}
+		}
+
+		[Test()]
+		public void PackString65536() {
+			var str = new StringBuilder ();
+			for (int i = 0; i < 65536; i++) {
+				str.Append ("a");
+			}
+
+			var packer = new MiniMessagePacker ();
+			var actual = packer.Pack (str.ToString());
+			Assert.AreEqual (str.Length + 1 + 4, actual.Length);
+			Assert.AreEqual (0xdb, actual [0]);
+			Assert.AreEqual (0x00, actual [1]);
+			Assert.AreEqual (0x01, actual [2]);
+			Assert.AreEqual (0x00, actual [3]);
+			Assert.AreEqual (0x00, actual [4]);
+			for (int i = 0; i < str.Length; i++) {
+				Assert.AreEqual (0x61, actual [i + 1 + 4]);
 			}
 		}
 

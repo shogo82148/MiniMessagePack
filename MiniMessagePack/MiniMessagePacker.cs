@@ -49,9 +49,12 @@ namespace MiniMessagePack
 		}
 
 		public void Pack(Stream s, object o) {
+			string asStr;
 			IList asList;
 			if (o == null)
 				PackNull (s);
+			else if ((asStr = o as string) != null)
+				Pack (s, asStr);
 			else if ((asList = o as IList) != null)
 				Pack (s, asList);
 			else if (o is bool)
@@ -244,6 +247,23 @@ namespace MiniMessagePack
 			} else {
 				s.Write (bytes, 0, 8);
 			}
+		}
+
+		private void Pack(Stream s, string val) {
+			var bytes = encoder.GetBytes (val);
+			if (bytes.Length < 0x10) {
+				s.WriteByte ((byte)(0xa0 + bytes.Length));
+			} else if (bytes.Length < 0x100) {
+				s.WriteByte (0xd9);
+				s.WriteByte ((byte)(bytes.Length));
+			} else if (bytes.Length < 0x10000) {
+				s.WriteByte (0xda);
+				Write (s, (ushort)(bytes.Length));
+			} else {
+				s.WriteByte (0xdb);
+				Write (s, (uint)(bytes.Length));
+			}
+			s.Write (bytes, 0, bytes.Length);
 		}
 
 		private void Write(Stream s, ushort val) {
