@@ -196,6 +196,25 @@ namespace MiniMessagePackTest
 			}
 		}
 
+		[Test()]
+		[TestCase( 0.0f, new byte[] { 0xca, 0x00, 0x00, 0x00, 0x00 })]
+		[TestCase( 1.0f, new byte[] { 0xca, 0x3f, 0x80, 0x00, 0x00 })]
+		[TestCase(-2.0f, new byte[] { 0xca, 0xc0, 0x00, 0x00, 0x00 })]
+		[TestCase( 0x800000, new byte[] { 0xca, 0x4b, 0x00, 0x00, 0x00 })]
+		[TestCase( 0x810000, new byte[] { 0xca, 0x4b, 0x01, 0x00, 0x00 })]
+		[TestCase( 0x800100, new byte[] { 0xca, 0x4b, 0x00, 0x01, 0x00 })]
+		[TestCase( 0x800001, new byte[] { 0xca, 0x4b, 0x00, 0x00, 0x01 })]
+		public void PackFloatValue(float value, byte[] expected)
+		{
+			var packer = new MiniMessagePacker ();
+			var actual = packer.Pack (value);
+			Assert.AreEqual (expected.Length, actual.Length, value + ": length");
+			for (int i = 0; i < expected.Length; i++) {
+				Assert.AreEqual (expected [i], actual [i], value + ": [" + i + "]");
+			}
+		}
+			
+
 		[Test ()]
 		[TestCase(0,   new byte[] {0x00}, "min positive fixed int")]
 		[TestCase(127, new byte[] {0x7f}, "max positive fixed int")]

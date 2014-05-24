@@ -68,6 +68,8 @@ namespace MiniMessagePack
 				Pack (s, (long)o);
 			else if (o is ulong)
 				Pack (s, (ulong)o);
+			else if (o is float)
+				Pack (s, (float)o);
 		}
 
 		private void PackNull(Stream s) {
@@ -187,6 +189,20 @@ namespace MiniMessagePack
 					s.WriteByte (0xcf);
 					Write (s, val);
 				}
+			}
+		}
+
+		private void Pack(Stream s, float val) {
+			var bytes = BitConverter.GetBytes (val);
+			s.WriteByte (0xca);
+			if (BitConverter.IsLittleEndian) {
+				tmp0 [0] = bytes [3];
+				tmp0 [1] = bytes [2];
+				tmp0 [2] = bytes [1];
+				tmp0 [3] = bytes [0];
+				s.Write (tmp0, 0, 4);
+			} else {
+				s.Write (bytes, 0, 4);
 			}
 		}
 
