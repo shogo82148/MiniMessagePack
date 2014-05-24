@@ -91,6 +91,24 @@ namespace MiniMessagePackTest
 			Assert.AreEqual (actual.GetType (), typeof(double));
 			Assert.AreEqual (expected, actual, message);
 		}
+
+		[Test()]
+		[TestCase("",    new byte[] { 0xa0 }, "empty string")]
+		[TestCase("a",   new byte[] { 0xa1, 0x61 }, "fixed string")]
+		[TestCase("bc",  new byte[] { 0xa2, 0x62, 0x63 }, "fixed string")]
+		[TestCase("def", new byte[] { 0xa3, 0x64, 0x65, 0x66 }, "fixed string")]
+		[TestCase("",    new byte[] {0xda, 0x00, 0x00}, "string 16")]
+		[TestCase("a",   new byte[] {0xda, 0x00, 0x01, 0x61}, "string 16")]
+		[TestCase("",    new byte[] {0xdb, 0x00, 0x00, 0x00, 0x00}, "string 16")]
+		[TestCase("a",   new byte[] {0xdb, 0x00, 0x00, 0x00, 0x01, 0x61}, "string 16")]
+		[TestCase("\u3042", new byte[] {0xa3, 0xe3, 0x81, 0x82}, "japanese")]
+		public void StringValues(string expected, byte[] data, string message)
+		{
+			var packer = new MiniMessagePacker ();
+			var actual = packer.Unpack (data);
+			Assert.AreEqual (actual.GetType (), typeof(string));
+			Assert.AreEqual (expected, actual, message);
+		}
 	}
 }
 
