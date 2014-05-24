@@ -156,6 +156,14 @@ namespace MiniMessagePackTest
 			var actual = (bool)packer.Unpack (data);
 			Assert.AreEqual (expected, actual);
 		}
+
+		[Test()]
+		public void NullValue()
+		{
+			var packer = new MiniMessagePacker ();
+			var actual = packer.Unpack (new byte[] { 0xc0 });
+			Assert.AreEqual (null, actual);
+		}
 	}
 }
 
