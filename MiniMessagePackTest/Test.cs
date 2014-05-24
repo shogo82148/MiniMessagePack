@@ -127,6 +127,26 @@ namespace MiniMessagePackTest
 			}
 		}
 
+		[Test()]
+		[TestCase((ulong)0,     new byte[] {0x00})]
+		[TestCase((ulong)127,   new byte[] {0x7f})]
+		[TestCase((ulong)128,   new byte[] {0xcc, 0x80})]
+		[TestCase((ulong)255,   new byte[] {0xcc, 0xff})]
+		[TestCase((ulong)256,   new byte[] {0xcd, 0x01, 0x00})]
+		[TestCase((ulong)65535, new byte[] {0xcd, 0xff, 0xff})]
+		[TestCase((ulong)65536, new byte[] {0xce, 0x00, 0x01, 0x00, 0x00})]
+		[TestCase((ulong)0xffffffff, new byte[] {0xce, 0xff, 0xff, 0xff, 0xff})]
+		[TestCase((ulong)0x100000000, new byte[] {0xcf, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00})]
+		public void PackUlongValue(ulong value, byte[] expected)
+		{
+			var packer = new MiniMessagePacker ();
+			var actual = packer.Pack ((object)value);
+			Assert.AreEqual (expected.Length, actual.Length, value + ": length");
+			for (int i = 0; i < expected.Length; i++) {
+				Assert.AreEqual (expected [i], actual [i], value + ": [" + i + "]");
+			}
+		}
+
 		[Test ()]
 		[TestCase(0,   new byte[] {0x00}, "min positive fixed int")]
 		[TestCase(127, new byte[] {0x7f}, "max positive fixed int")]
