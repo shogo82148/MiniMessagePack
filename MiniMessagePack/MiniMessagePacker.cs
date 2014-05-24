@@ -70,6 +70,8 @@ namespace MiniMessagePack
 				Pack (s, (ulong)o);
 			else if (o is float)
 				Pack (s, (float)o);
+			else if (o is double)
+				Pack (s, (double)o);
 		}
 
 		private void PackNull(Stream s) {
@@ -203,6 +205,24 @@ namespace MiniMessagePack
 				s.Write (tmp0, 0, 4);
 			} else {
 				s.Write (bytes, 0, 4);
+			}
+		}
+
+		private void Pack(Stream s, double val) {
+			var bytes = BitConverter.GetBytes (val);
+			s.WriteByte (0xcb);
+			if (BitConverter.IsLittleEndian) {
+				tmp0 [0] = bytes [7];
+				tmp0 [1] = bytes [6];
+				tmp0 [2] = bytes [5];
+				tmp0 [3] = bytes [4];
+				tmp0 [4] = bytes [3];
+				tmp0 [5] = bytes [2];
+				tmp0 [6] = bytes [1];
+				tmp0 [7] = bytes [0];
+				s.Write (tmp0, 0, 8);
+			} else {
+				s.Write (bytes, 0, 8);
 			}
 		}
 
