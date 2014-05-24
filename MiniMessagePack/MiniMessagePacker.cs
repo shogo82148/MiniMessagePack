@@ -89,6 +89,18 @@ namespace MiniMessagePack
 		}
 
 		private void Pack(Stream s, short val) {
+			unchecked {
+				if (val >= 0) {
+					Pack (s, (ushort)val);
+				} else if (val >= -128) {
+					Pack (s, (sbyte)val);
+				} else {
+					tmp0 [0] = 0xd1;
+					tmp0 [1] = (byte)(val >> 8);
+					tmp0 [2] = (byte)val;
+					s.Write (tmp0, 0, 3);
+				}
+			}
 		}
 
 		private void Pack(Stream s, ushort val) {

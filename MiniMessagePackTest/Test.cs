@@ -40,6 +40,31 @@ namespace MiniMessagePackTest
 			}
 		}
 
+
+		[Test()]
+		[TestCase(0,       new byte[] {0x00})]
+		[TestCase(127,     new byte[] {0x7f})]
+		[TestCase(128,     new byte[] {0xcc, 0x80})]
+		[TestCase(255,     new byte[] {0xcc, 0xff})]
+		[TestCase(256,     new byte[] {0xcd, 0x01, 0x00})]
+		[TestCase(0x7fff,  new byte[] {0xcd, 0x7f, 0xff})]
+		[TestCase(-1,      new byte[] {0xff})]
+		[TestCase(-32,     new byte[] {0xe0})]
+		[TestCase(-33,     new byte[] {0xd0, 0xdf})]
+		[TestCase(-128,    new byte[] {0xd0, 0x80})]
+		[TestCase(-129,    new byte[] {0xd1, 0xff, 0x7f})]
+		[TestCase(-0x8000, new byte[] {0xd1, 0x80, 0x00})]
+		public void PackShortValue(int value, byte[] expected)
+		{
+			var packer = new MiniMessagePacker ();
+			var actual = packer.Pack ((object)(short)value);
+			Assert.AreEqual (expected.Length, actual.Length, "length");
+			for (int i = 0; i < expected.Length; i++) {
+				Assert.AreEqual (expected [i], actual [i], "byte: " + i);
+			}
+		}
+
+
 		[Test()]
 		[TestCase(0,     new byte[] {0x00})]
 		[TestCase(127,   new byte[] {0x7f})]
