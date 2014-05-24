@@ -29,6 +29,7 @@ using System;
 using System.Text;
 using System.IO;
 using System.Collections.Generic;
+using System.Collections;
 
 namespace MiniMessagePack
 {
@@ -38,6 +39,286 @@ namespace MiniMessagePack
 		private byte[] tmp1 = new byte[8];
 		private byte[] string_buf = new byte[128];
 		private Encoding encoder = Encoding.UTF8;
+
+		public byte[] Pack (object o)
+		{
+			using (MemoryStream ms = new MemoryStream ()) {
+				Pack (ms, o);
+				return ms.ToArray ();
+			}
+		}
+
+		public void Pack(Stream s, object o) {
+			IDictionary asDict;
+			string asStr;
+			IList asList;
+			if (o == null)
+				PackNull (s);
+			else if ((asStr = o as string) != null)
+				Pack (s, asStr);
+			else if ((asList = o as IList) != null)
+				Pack (s, asList);
+			else if ((asDict = o as IDictionary) != null)
+				Pack (s, asDict);
+			else if (o is bool)
+				Pack (s, (bool)o);
+			else if (o is sbyte)
+				Pack (s, (sbyte)o);
+			else if (o is byte)
+				Pack (s, (byte)o);
+			else if (o is short)
+				Pack (s, (short)o);
+			else if (o is ushort)
+				Pack (s, (ushort)o);
+			else if (o is int)
+				Pack (s, (int)o);
+			else if (o is uint)
+				Pack (s, (uint)o);
+			else if (o is long)
+				Pack (s, (long)o);
+			else if (o is ulong)
+				Pack (s, (ulong)o);
+			else if (o is float)
+				Pack (s, (float)o);
+			else if (o is double)
+				Pack (s, (double)o);
+			else
+				Pack (s, o.ToString ());
+		}
+
+		private void PackNull(Stream s) {
+			s.WriteByte (0xc0);
+		}
+
+		private void Pack (Stream s, IList list) {
+			int count = list.Count;
+			if (count < 16) {
+				s.WriteByte ((byte)(0x90 + count));
+			} else if (count < 0x10000) {
+				s.WriteByte (0xdc);
+				Write (s, (ushort)count);
+			} else {
+				s.WriteByte (0xdd);
+				Write (s, (uint)count);
+			}
+			foreach (object o in list) {
+				Pack (s, o);
+			}
+		}
+
+		private void Pack (Stream s, IDictionary dict) {
+			int count = dict.Count;
+			if (count < 16) {
+				s.WriteByte ((byte)(0x80 + count));
+			} else if (count < 0x10000) {
+				s.WriteByte (0xde);
+				Write (s, (ushort)count);
+			} else {
+				s.WriteByte (0xdf);
+				Write (s, (uint)count);
+			}
+			foreach (object key in dict.Keys) {
+				Pack (s, key);
+				Pack (s, dict [key]);
+			}
+		}
+
+		private void Pack(Stream s, bool val) {
+			s.WriteByte (val ? (byte)0xc3 : (byte)0xc2);
+		}
+
+		private void Pack(Stream s, sbyte val) {
+			unchecked {
+				if (val >= -32) {
+					s.WriteByte ((byte)val);
+				} else {
+					tmp0 [0] = 0xd0;
+					tmp0 [1] = (byte)val;
+					s.Write (tmp0, 0, 2);
+				}
+			}
+		}
+
+		private void Pack(Stream s, byte val) {
+			if (val <= 0x7f) {
+				s.WriteByte (val);
+			} else {
+				tmp0 [0] = 0xcc;
+				tmp0 [1] = val;
+				s.Write (tmp0, 0, 2);
+			}
+		}
+
+		private void Pack(Stream s, short val) {
+			unchecked {
+				if (val >= 0) {
+					Pack (s, (ushort)val);
+				} else if (val >= -128) {
+					Pack (s, (sbyte)val);
+				} else {
+					s.WriteByte (0xd1);
+					Write (s, (ushort)val);
+				}
+			}
+		}
+
+		private void Pack(Stream s, ushort val) {
+			unchecked {
+				if (val < 0x100) {
+					Pack (s, (byte)val);
+				} else {
+					s.WriteByte (0xcd);
+					Write (s, (ushort)val);
+				}
+			}
+		}
+
+		private void Pack(Stream s, int val) {
+			unchecked {
+				if (val >= 0) {
+					Pack (s, (uint)val);
+				} else if (val >= -128) {
+					Pack (s, (sbyte)val);
+				} else if (val >= -0x8000) {
+					s.WriteByte (0xd1);
+					Write (s, (ushort)val);
+				} else {
+					s.WriteByte (0xd2);
+					Write (s, (uint)val);
+				}
+			}
+		}
+
+		private void Pack(Stream s, uint val) {
+			unchecked {
+				if (val < 0x100) {
+					Pack (s, (byte)val);
+				} else if (val < 0x10000) {
+					s.WriteByte (0xcd);
+					Write (s, (ushort)val);
+				} else {
+					s.WriteByte (0xce);
+					Write (s, (uint)val);
+				}
+			}
+		}
+
+		private void Pack(Stream s, long val) {
+			unchecked {
+				if (val >= 0) {
+					Pack (s, (ulong)val);
+				} else if (val >= -128) {
+					Pack (s, (sbyte)val);
+				} else if (val >= -0x8000) {
+					s.WriteByte (0xd1);
+					Write (s, (ushort)val);
+				} else if (val >= -0x80000000) {
+					s.WriteByte (0xd2);
+					Write (s, (uint)val);
+				} else {
+					s.WriteByte (0xd3);
+					Write (s, (ulong)val);
+				}
+			}
+		}
+
+		private void Pack(Stream s, ulong val) {
+			unchecked {
+				if (val < 0x100) {
+					Pack (s, (byte)val);
+				} else if (val < 0x10000) {
+					s.WriteByte (0xcd);
+					Write (s, (ushort)val);
+				} else if (val < 0x100000000) {
+					s.WriteByte (0xce);
+					Write (s, (uint)val);
+				} else {
+					s.WriteByte (0xcf);
+					Write (s, val);
+				}
+			}
+		}
+
+		private void Pack(Stream s, float val) {
+			var bytes = BitConverter.GetBytes (val);
+			s.WriteByte (0xca);
+			if (BitConverter.IsLittleEndian) {
+				tmp0 [0] = bytes [3];
+				tmp0 [1] = bytes [2];
+				tmp0 [2] = bytes [1];
+				tmp0 [3] = bytes [0];
+				s.Write (tmp0, 0, 4);
+			} else {
+				s.Write (bytes, 0, 4);
+			}
+		}
+
+		private void Pack(Stream s, double val) {
+			var bytes = BitConverter.GetBytes (val);
+			s.WriteByte (0xcb);
+			if (BitConverter.IsLittleEndian) {
+				tmp0 [0] = bytes [7];
+				tmp0 [1] = bytes [6];
+				tmp0 [2] = bytes [5];
+				tmp0 [3] = bytes [4];
+				tmp0 [4] = bytes [3];
+				tmp0 [5] = bytes [2];
+				tmp0 [6] = bytes [1];
+				tmp0 [7] = bytes [0];
+				s.Write (tmp0, 0, 8);
+			} else {
+				s.Write (bytes, 0, 8);
+			}
+		}
+
+		private void Pack(Stream s, string val) {
+			var bytes = encoder.GetBytes (val);
+			if (bytes.Length < 0x10) {
+				s.WriteByte ((byte)(0xa0 + bytes.Length));
+			} else if (bytes.Length < 0x100) {
+				s.WriteByte (0xd9);
+				s.WriteByte ((byte)(bytes.Length));
+			} else if (bytes.Length < 0x10000) {
+				s.WriteByte (0xda);
+				Write (s, (ushort)(bytes.Length));
+			} else {
+				s.WriteByte (0xdb);
+				Write (s, (uint)(bytes.Length));
+			}
+			s.Write (bytes, 0, bytes.Length);
+		}
+
+		private void Write(Stream s, ushort val) {
+			unchecked {
+				tmp0 [0] = (byte)(val >> 8);
+				tmp0 [1] = (byte)val;
+				s.Write (tmp0, 0, 2);
+			}
+		}
+
+		private void Write(Stream s, uint val) {
+			unchecked {
+				tmp0 [0] = (byte)(val >> 24);
+				tmp0 [1] = (byte)(val >> 16);
+				tmp0 [2] = (byte)(val >> 8);
+				tmp0 [3] = (byte)val;
+				s.Write (tmp0, 0, 4);
+			}
+		}
+
+		private void Write(Stream s, ulong val) {
+			unchecked {
+				tmp0 [0] = (byte)(val >> 56);
+				tmp0 [1] = (byte)(val >> 48);
+				tmp0 [2] = (byte)(val >> 40);
+				tmp0 [3] = (byte)(val >> 32);
+				tmp0 [4] = (byte)(val >> 24);
+				tmp0 [5] = (byte)(val >> 16);
+				tmp0 [6] = (byte)(val >> 8);
+				tmp0 [7] = (byte)val;
+				s.Write (tmp0, 0, 8);
+			}
+		}
 
 		public object Unpack (byte[] buf, int offset, int size) {
 			using (MemoryStream ms = new MemoryStream (buf, offset, size)) {

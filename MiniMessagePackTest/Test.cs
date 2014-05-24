@@ -2,12 +2,434 @@
 using System;
 using MiniMessagePack;
 using System.Collections.Generic;
+using System.Text;
 
 namespace MiniMessagePackTest
 {
 	[TestFixture ()]
 	public class Test
 	{
+		[Test()]
+		public void PackNull()
+		{
+			var packer = new MiniMessagePacker ();
+			var actual = packer.Pack (null);
+			Assert.AreEqual (1, actual.Length, "length");
+			Assert.AreEqual (0xc0, actual[0], "value");
+		}
+
+		[Test()]
+		[TestCase(false, 0xc2)]
+		[TestCase(true, 0xc3)]
+		public void PackBoolean(bool value, byte expected)
+		{
+			var packer = new MiniMessagePacker ();
+			var actual = packer.Pack ((object)value);
+			Assert.AreEqual (1, actual.Length, value + ": length");
+			Assert.AreEqual (expected, actual[0], value + ": value");
+		}
+
+		[Test()]
+		[TestCase(0,    new byte[] {0x00})]
+		[TestCase(127,  new byte[] {0x7f})]
+		[TestCase(-1,   new byte[] {0xff})]
+		[TestCase(-32,  new byte[] {0xe0})]
+		[TestCase(-33,  new byte[] {0xd0, 0xdf})]
+		[TestCase(-128, new byte[] {0xd0, 0x80})]
+		public void PackSbyteValue(sbyte value, byte[] expected)
+		{
+			var packer = new MiniMessagePacker ();
+			var actual = packer.Pack ((object)value);
+			Assert.AreEqual (expected.Length, actual.Length, "length");
+			for (int i = 0; i < expected.Length; i++) {
+				Assert.AreEqual (expected [i], actual [i], "byte: " + i);
+			}
+		}
+
+		[Test()]
+		[TestCase(0, new byte[] {0x00})]
+		[TestCase(127, new byte[] {0x7f})]
+		[TestCase(128, new byte[] {0xcc, 0x80})]
+		[TestCase(255, new byte[] {0xcc, 0xff})]
+		public void PackByteValue(byte value, byte[] expected)
+		{
+			var packer = new MiniMessagePacker ();
+			var actual = packer.Pack ((object)value);
+			Assert.AreEqual (expected.Length, actual.Length, "length");
+			for (int i = 0; i < expected.Length; i++) {
+				Assert.AreEqual (expected [i], actual [i], "byte: " + i);
+			}
+		}
+
+
+		[Test()]
+		[TestCase(0,       new byte[] {0x00})]
+		[TestCase(127,     new byte[] {0x7f})]
+		[TestCase(128,     new byte[] {0xcc, 0x80})]
+		[TestCase(255,     new byte[] {0xcc, 0xff})]
+		[TestCase(256,     new byte[] {0xcd, 0x01, 0x00})]
+		[TestCase(0x7fff,  new byte[] {0xcd, 0x7f, 0xff})]
+		[TestCase(-1,      new byte[] {0xff})]
+		[TestCase(-32,     new byte[] {0xe0})]
+		[TestCase(-33,     new byte[] {0xd0, 0xdf})]
+		[TestCase(-128,    new byte[] {0xd0, 0x80})]
+		[TestCase(-129,    new byte[] {0xd1, 0xff, 0x7f})]
+		[TestCase(-0x8000, new byte[] {0xd1, 0x80, 0x00})]
+		public void PackShortValue(int value, byte[] expected)
+		{
+			var packer = new MiniMessagePacker ();
+			var actual = packer.Pack ((object)(short)value);
+			Assert.AreEqual (expected.Length, actual.Length, "length");
+			for (int i = 0; i < expected.Length; i++) {
+				Assert.AreEqual (expected [i], actual [i], "byte: " + i);
+			}
+		}
+
+
+		[Test()]
+		[TestCase(0,     new byte[] {0x00})]
+		[TestCase(127,   new byte[] {0x7f})]
+		[TestCase(128,   new byte[] {0xcc, 0x80})]
+		[TestCase(255,   new byte[] {0xcc, 0xff})]
+		[TestCase(256,   new byte[] {0xcd, 0x01, 0x00})]
+		[TestCase(65535, new byte[] {0xcd, 0xff, 0xff})]
+		public void PackUshortValue(int value, byte[] expected)
+		{
+			var packer = new MiniMessagePacker ();
+			var actual = packer.Pack ((object)(ushort)value);
+			Assert.AreEqual (expected.Length, actual.Length, "length");
+			for (int i = 0; i < expected.Length; i++) {
+				Assert.AreEqual (expected [i], actual [i], "byte: " + i);
+			}
+		}
+
+		[Test()]
+		[TestCase(0,     new byte[] {0x00})]
+		[TestCase(127,   new byte[] {0x7f})]
+		[TestCase(128,   new byte[] {0xcc, 0x80})]
+		[TestCase(255,   new byte[] {0xcc, 0xff})]
+		[TestCase(256,   new byte[] {0xcd, 0x01, 0x00})]
+		[TestCase(65535, new byte[] {0xcd, 0xff, 0xff})]
+		[TestCase(65536, new byte[] {0xce, 0x00, 0x01, 0x00, 0x00})]
+		[TestCase(0x7fffffff, new byte[] {0xce, 0x7f, 0xff, 0xff, 0xff})]
+		[TestCase(-1,      new byte[] {0xff})]
+		[TestCase(-32,     new byte[] {0xe0})]
+		[TestCase(-33,     new byte[] {0xd0, 0xdf})]
+		[TestCase(-128,    new byte[] {0xd0, 0x80})]
+		[TestCase(-129,    new byte[] {0xd1, 0xff, 0x7f})]
+		[TestCase(-0x8000, new byte[] {0xd1, 0x80, 0x00})]
+		[TestCase(-0x8001, new byte[] {0xd2, 0xff, 0xff, 0x7f, 0xff})]
+		public void PackIntValue(int value, byte[] expected)
+		{
+			var packer = new MiniMessagePacker ();
+			var actual = packer.Pack ((object)value);
+			Assert.AreEqual (expected.Length, actual.Length, value + ": length");
+			for (int i = 0; i < expected.Length; i++) {
+				Assert.AreEqual (expected [i], actual [i], value + ": [" + i + "]");
+			}
+		}
+
+		[Test()]
+		[TestCase(0,     new byte[] {0x00})]
+		[TestCase(127,   new byte[] {0x7f})]
+		[TestCase(128,   new byte[] {0xcc, 0x80})]
+		[TestCase(255,   new byte[] {0xcc, 0xff})]
+		[TestCase(256,   new byte[] {0xcd, 0x01, 0x00})]
+		[TestCase(65535, new byte[] {0xcd, 0xff, 0xff})]
+		[TestCase(65536, new byte[] {0xce, 0x00, 0x01, 0x00, 0x00})]
+		[TestCase(0xffffffff, new byte[] {0xce, 0xff, 0xff, 0xff, 0xff})]
+		public void PackUintValue(long value, byte[] expected)
+		{
+			var packer = new MiniMessagePacker ();
+			var actual = packer.Pack ((object)(uint)value);
+			Assert.AreEqual (expected.Length, actual.Length, "length");
+			for (int i = 0; i < expected.Length; i++) {
+				Assert.AreEqual (expected [i], actual [i], "byte: " + i);
+			}
+		}
+
+		[Test()]
+		[TestCase(0,       new byte[] {0x00})]
+		[TestCase(127,     new byte[] {0x7f})]
+		[TestCase(128,     new byte[] {0xcc, 0x80})]
+		[TestCase(255,     new byte[] {0xcc, 0xff})]
+		[TestCase(256,     new byte[] {0xcd, 0x01, 0x00})]
+		[TestCase(0xffff,  new byte[] {0xcd, 0xff, 0xff})]
+		[TestCase(0x10000, new byte[] {0xce, 0x00, 0x01, 0x00, 0x00})]
+		[TestCase(0xffffffff, new byte[] {0xce, 0xff, 0xff, 0xff, 0xff})]
+		[TestCase(0x100000000, new byte[] {0xcf, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00})]
+		[TestCase(-1,      new byte[] {0xff})]
+		[TestCase(-32,     new byte[] {0xe0})]
+		[TestCase(-33,     new byte[] {0xd0, 0xdf})]
+		[TestCase(-128,    new byte[] {0xd0, 0x80})]
+		[TestCase(-129,    new byte[] {0xd1, 0xff, 0x7f})]
+		[TestCase(-0x8000, new byte[] {0xd1, 0x80, 0x00})]
+		[TestCase(-0x8001, new byte[] {0xd2, 0xff, 0xff, 0x7f, 0xff})]
+		[TestCase(-0x80000000, new byte[] {0xd2, 0x80, 0x00, 0x00, 0x00})]
+		[TestCase(-0x80000001, new byte[] {0xd3, 0xff, 0xff, 0xff, 0xff, 0x7f, 0xff, 0xff, 0xff})]
+		public void PackLongValue(long value, byte[] expected)
+		{
+			var packer = new MiniMessagePacker ();
+			var actual = packer.Pack ((object)value);
+			Assert.AreEqual (expected.Length, actual.Length, value + ": length");
+			for (int i = 0; i < expected.Length; i++) {
+				Assert.AreEqual (expected [i], actual [i], value + ": [" + i + "]");
+			}
+		}
+
+		[Test()]
+		[TestCase((ulong)0,     new byte[] {0x00})]
+		[TestCase((ulong)127,   new byte[] {0x7f})]
+		[TestCase((ulong)128,   new byte[] {0xcc, 0x80})]
+		[TestCase((ulong)255,   new byte[] {0xcc, 0xff})]
+		[TestCase((ulong)256,   new byte[] {0xcd, 0x01, 0x00})]
+		[TestCase((ulong)65535, new byte[] {0xcd, 0xff, 0xff})]
+		[TestCase((ulong)65536, new byte[] {0xce, 0x00, 0x01, 0x00, 0x00})]
+		[TestCase((ulong)0xffffffff, new byte[] {0xce, 0xff, 0xff, 0xff, 0xff})]
+		[TestCase((ulong)0x100000000, new byte[] {0xcf, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00})]
+		public void PackUlongValue(ulong value, byte[] expected)
+		{
+			var packer = new MiniMessagePacker ();
+			var actual = packer.Pack ((object)value);
+			Assert.AreEqual (expected.Length, actual.Length, value + ": length");
+			for (int i = 0; i < expected.Length; i++) {
+				Assert.AreEqual (expected [i], actual [i], value + ": [" + i + "]");
+			}
+		}
+
+		[Test()]
+		[TestCase( 0.0f, new byte[] { 0xca, 0x00, 0x00, 0x00, 0x00 })]
+		[TestCase( 1.0f, new byte[] { 0xca, 0x3f, 0x80, 0x00, 0x00 })]
+		[TestCase(-2.0f, new byte[] { 0xca, 0xc0, 0x00, 0x00, 0x00 })]
+		[TestCase( 0x800000, new byte[] { 0xca, 0x4b, 0x00, 0x00, 0x00 })]
+		[TestCase( 0x810000, new byte[] { 0xca, 0x4b, 0x01, 0x00, 0x00 })]
+		[TestCase( 0x800100, new byte[] { 0xca, 0x4b, 0x00, 0x01, 0x00 })]
+		[TestCase( 0x800001, new byte[] { 0xca, 0x4b, 0x00, 0x00, 0x01 })]
+		public void PackFloatValue(float value, byte[] expected)
+		{
+			var packer = new MiniMessagePacker ();
+			var actual = packer.Pack (value);
+			Assert.AreEqual (expected.Length, actual.Length, value + ": length");
+			for (int i = 0; i < expected.Length; i++) {
+				Assert.AreEqual (expected [i], actual [i], value + ": [" + i + "]");
+			}
+		}
+
+		[TestCase( 0.0, new byte[] { 0xcb, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 })]
+		[TestCase( 1.0, new byte[] { 0xcb, 0x3f, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 })]
+		[TestCase( 2.0, new byte[] { 0xcb, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 })]
+		[TestCase(-2.0, new byte[] { 0xcb, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 })]
+		[TestCase( 0x10000000000000, new byte[] { 0xcb, 0x43, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 })]
+		[TestCase( 0x10010000000000, new byte[] { 0xcb, 0x43, 0x30, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00 })]
+		[TestCase( 0x10000100000000, new byte[] { 0xcb, 0x43, 0x30, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00 })]
+		[TestCase( 0x10000001000000, new byte[] { 0xcb, 0x43, 0x30, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00 })]
+		[TestCase( 0x10000000010000, new byte[] { 0xcb, 0x43, 0x30, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00 })]
+		[TestCase( 0x10000000000100, new byte[] { 0xcb, 0x43, 0x30, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00 })]
+		[TestCase( 0x10000000000001, new byte[] { 0xcb, 0x43, 0x30, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 })]
+		public void PackDoubleValue(double value, byte[] expected)
+		{
+			var packer = new MiniMessagePacker ();
+			var actual = packer.Pack (value);
+			Assert.AreEqual (expected.Length, actual.Length, value + ": length");
+			for (int i = 0; i < expected.Length; i++) {
+				Assert.AreEqual (expected [i], actual [i], value + ": [" + i + "]");
+			}
+		}
+
+		[Test()]
+		[TestCase("",    new byte[] { 0xa0 })]
+		[TestCase("a",   new byte[] { 0xa1, 0x61 })]
+		[TestCase("bc",  new byte[] { 0xa2, 0x62, 0x63 })]
+		[TestCase("123456789abcdef", new byte[] { 0xaf, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66 })]
+		[TestCase("0123456789abcdef", new byte[] { 0xd9, 0x10, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66 })]
+		[TestCase("\u3042", new byte[] {0xa3, 0xe3, 0x81, 0x82})]
+		public void PackString(string value, byte[] expected) {
+			var packer = new MiniMessagePacker ();
+			var actual = packer.Pack (value);
+			Assert.AreEqual (expected.Length, actual.Length, value + ": length");
+			for (int i = 0; i < expected.Length; i++) {
+				Assert.AreEqual (expected [i], actual [i], value + ": [" + i + "]");
+			}
+		}
+
+		[Test()]
+		public void PackString255() {
+			var str = new StringBuilder ();
+			for (int i = 0; i < 255; i++) {
+				str.Append ("a");
+			}
+
+			var packer = new MiniMessagePacker ();
+			var actual = packer.Pack (str.ToString());
+			Assert.AreEqual (str.Length + 2, actual.Length);
+			Assert.AreEqual (0xd9, actual [0]);
+			Assert.AreEqual (0xff, actual [1]);
+			for (int i = 0; i < str.Length; i++) {
+				Assert.AreEqual (0x61, actual [i + 2]);
+			}
+		}
+
+		[Test()]
+		public void PackString256() {
+			var str = new StringBuilder ();
+			for (int i = 0; i < 256; i++) {
+				str.Append ("a");
+			}
+
+			var packer = new MiniMessagePacker ();
+			var actual = packer.Pack (str.ToString());
+			Assert.AreEqual (str.Length + 1 + 2, actual.Length);
+			Assert.AreEqual (0xda, actual [0]);
+			Assert.AreEqual (0x01, actual [1]);
+			Assert.AreEqual (0x00, actual [2]);
+			for (int i = 0; i < str.Length; i++) {
+				Assert.AreEqual (0x61, actual [i + 1 + 2]);
+			}
+		}
+
+		[Test()]
+		public void PackString65535() {
+			var str = new StringBuilder ();
+			for (int i = 0; i < 65535; i++) {
+				str.Append ("a");
+			}
+
+			var packer = new MiniMessagePacker ();
+			var actual = packer.Pack (str.ToString());
+			Assert.AreEqual (str.Length + 1 + 2, actual.Length);
+			Assert.AreEqual (0xda, actual [0]);
+			Assert.AreEqual (0xff, actual [1]);
+			Assert.AreEqual (0xff, actual [2]);
+			for (int i = 0; i < str.Length; i++) {
+				Assert.AreEqual (0x61, actual [i + 1 + 2]);
+			}
+		}
+
+		[Test()]
+		public void PackString65536() {
+			var str = new StringBuilder ();
+			for (int i = 0; i < 65536; i++) {
+				str.Append ("a");
+			}
+
+			var packer = new MiniMessagePacker ();
+			var actual = packer.Pack (str.ToString());
+			Assert.AreEqual (str.Length + 1 + 4, actual.Length);
+			Assert.AreEqual (0xdb, actual [0]);
+			Assert.AreEqual (0x00, actual [1]);
+			Assert.AreEqual (0x01, actual [2]);
+			Assert.AreEqual (0x00, actual [3]);
+			Assert.AreEqual (0x00, actual [4]);
+			for (int i = 0; i < str.Length; i++) {
+				Assert.AreEqual (0x61, actual [i + 1 + 4]);
+			}
+		}
+
+		[Test()]
+		[TestCase( new object[]{}, new byte[] { 0x90 }, "empty array" )]
+		[TestCase( new object[]{ 1 }, new byte[] { 0x91, 0x01 }, "length 1" )]
+		[TestCase( new object[]{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 }, 
+			new byte[] { 0x9f, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f }, "length 15" )]
+		[TestCase( new object[]{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 }, 
+			new byte[] { 0xdc, 0x00, 0x10, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10 }, "length 16" )]
+		public void PackArray(object[] array, byte[] expected, string message)
+		{
+			var packer = new MiniMessagePacker ();
+			var actual = packer.Pack (array);
+			Assert.AreEqual (expected.Length, actual.Length, message + ": length");
+			for (int i = 0; i < expected.Length; i++) {
+				Assert.AreEqual (expected [i], actual [i], message + ": [" + i + "]");
+			}
+		}
+
+		[Test()]
+		public void PackLongArray()
+		{
+			var array = new int[65535];
+			for (int i = 0; i < array.Length; i++) {
+				array [i] = 0x00;
+			}
+
+			var packer = new MiniMessagePacker ();
+			var actual = packer.Pack (array);
+			Assert.AreEqual (array.Length + 1 + 2, actual.Length);
+			Assert.AreEqual (0xdc, actual [0]);
+			Assert.AreEqual (0xff, actual [1]);
+			Assert.AreEqual (0xff, actual [2]);
+			for (int i = 0; i < array.Length; i++) {
+				Assert.AreEqual (0x00, actual [i + 1 + 2]);
+			}
+		}
+
+		[Test()]
+		public void PackVeryLongArray()
+		{
+			var array = new int[65536];
+			for (int i = 0; i < array.Length; i++) {
+				array [i] = 0x00;
+			}
+
+			var packer = new MiniMessagePacker ();
+			var actual = packer.Pack (array);
+			Assert.AreEqual (array.Length + 1 + 4, actual.Length);
+			Assert.AreEqual (0xdd, actual [0]);
+			Assert.AreEqual (0x00, actual [1]);
+			Assert.AreEqual (0x01, actual [2]);
+			Assert.AreEqual (0x00, actual [3]);
+			Assert.AreEqual (0x00, actual [4]);
+			for (int i = 0; i < array.Length; i++) {
+				Assert.AreEqual (0x00, actual [i + 1 + 4]);
+			}
+		}
+
+		[Test()]
+		[TestCase( new string[] {}, new object[]{}, new byte[] { 0x80 }, "empty map" )]
+		[TestCase( new string[] {"a"}, new object[]{ 1 }, new byte[] { 0x81, 0xa1, 0x61, 0x01 }, "length 1" )]
+		[TestCase(
+			new string[]{ "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f" },
+			new object[]{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 }, 
+			new byte[] { 0x8f, 0xa1, 0x31, 0x01, 0xa1, 0x32, 0x02, 0xa1, 0x33, 0x03, 0xa1, 0x34, 0x04,
+				0xa1, 0x35, 0x05, 0xa1, 0x36, 0x06, 0xa1, 0x37, 0x07, 0xa1, 0x38, 0x08,
+				0xa1, 0x39, 0x09, 0xa1, 0x61, 0x0a, 0xa1, 0x62, 0x0b, 0xa1, 0x63, 0x0c,
+				0xa1, 0x64, 0x0d, 0xa1, 0x65, 0x0e, 0xa1, 0x66, 0x0f }, "length 15" )]
+		[TestCase(
+			new string[]{ "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f" },
+			new object[]{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 }, 
+			new byte[] { 0xde, 0x00, 0x10, 0xa1, 0x30, 0x00, 0xa1, 0x31, 0x01, 0xa1, 0x32, 0x02, 0xa1, 0x33, 0x03, 0xa1, 0x34, 0x04,
+				0xa1, 0x35, 0x05, 0xa1, 0x36, 0x06, 0xa1, 0x37, 0x07, 0xa1, 0x38, 0x08,
+				0xa1, 0x39, 0x09, 0xa1, 0x61, 0x0a, 0xa1, 0x62, 0x0b, 0xa1, 0x63, 0x0c,
+				0xa1, 0x64, 0x0d, 0xa1, 0x65, 0x0e, 0xa1, 0x66, 0x0f }, "length 16" )]
+		public void PackMap(string[] keys, object[] values, byte[] expected, string message)
+		{
+			var packer = new MiniMessagePacker ();
+			var dict = new SortedDictionary<string, object> ();
+			for (int i = 0; i < keys.Length; i++) {
+				dict.Add (keys [i], values [i]);
+			}
+			var actual = packer.Pack (dict);
+			Assert.AreEqual (expected.Length, actual.Length, message + ": length");
+			for (int i = 0; i < expected.Length; i++) {
+				Assert.AreEqual (expected [i], actual [i], message + ": [" + i + "]");
+			}
+		}
+
+		private class MyClass
+		{
+			public override string ToString ()
+			{
+				return "a";
+			}
+		}
+
+		[Test()]
+		public void PackKnownObject() {
+			var packer = new MiniMessagePacker ();
+			var actual = packer.Pack ( new MyClass() );
+			Assert.AreEqual (2, actual.Length);
+			Assert.AreEqual (0xa1, actual[0]);
+			Assert.AreEqual (0x61, actual[1]);
+		}
+
 		[Test ()]
 		[TestCase(0,   new byte[] {0x00}, "min positive fixed int")]
 		[TestCase(127, new byte[] {0x7f}, "max positive fixed int")]
