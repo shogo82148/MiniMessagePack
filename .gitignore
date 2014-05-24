@@ -1,0 +1,18 @@
+# Created by http://www.gitignore.io
+
+### XamarinStudio ###
+bin/
+obj/
+*.userprefs
+
+
+### MonoDevelop ###
+#User Specific
+*.userprefs
+*.usertasks
+
+#Mono Project Files
+*.pidb
+*.resources
+test-results/
+
