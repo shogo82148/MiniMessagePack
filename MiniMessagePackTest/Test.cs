@@ -9,6 +9,15 @@ namespace MiniMessagePackTest
 	public class Test
 	{
 		[Test()]
+		public void PackNull()
+		{
+			var packer = new MiniMessagePacker ();
+			var actual = packer.Pack (null);
+			Assert.AreEqual (1, actual.Length, "length");
+			Assert.AreEqual (0xc0, actual[0], "value");
+		}
+
+		[Test()]
 		[TestCase(false, 0xc2)]
 		[TestCase(true, 0xc3)]
 		public void PackBoolean(bool value, byte expected)

@@ -48,7 +48,9 @@ namespace MiniMessagePack
 		}
 
 		public void Pack(Stream s, object o) {
-			if (o is bool)
+			if (o == null)
+				PackNull (s);
+			else if (o is bool)
 				Pack (s, (bool)o);
 			else if (o is sbyte)
 				Pack (s, (sbyte)o);
@@ -66,6 +68,10 @@ namespace MiniMessagePack
 				Pack (s, (long)o);
 			else if (o is ulong)
 				Pack (s, (ulong)o);
+		}
+
+		private void PackNull(Stream s) {
+			s.WriteByte (0xc0);
 		}
 
 		private void Pack(Stream s, bool val) {
