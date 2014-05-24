@@ -8,6 +8,21 @@ namespace MiniMessagePackTest
 	[TestFixture ()]
 	public class Test
 	{
+		[Test()]
+		[TestCase(0, new byte[] {0x00})]
+		[TestCase(127, new byte[] {0x7f})]
+		[TestCase(128, new byte[] {0xcc, 0x80})]
+		[TestCase(255, new byte[] {0xcc, 0xff})]
+		public void PackIntegerValue(byte value, byte[] expected)
+		{
+			var packer = new MiniMessagePacker ();
+			var actual = packer.Pack ((object)value);
+			Assert.AreEqual (expected.Length, actual.Length, "length");
+			for (int i = 0; i < expected.Length; i++) {
+				Assert.AreEqual (expected [i], actual [i], "byte: " + i);
+			}
+		}
+
 		[Test ()]
 		[TestCase(0,   new byte[] {0x00}, "min positive fixed int")]
 		[TestCase(127, new byte[] {0x7f}, "max positive fixed int")]

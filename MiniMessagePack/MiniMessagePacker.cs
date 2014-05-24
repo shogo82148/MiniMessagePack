@@ -39,6 +39,65 @@ namespace MiniMessagePack
 		private byte[] string_buf = new byte[128];
 		private Encoding encoder = Encoding.UTF8;
 
+		public byte[] Pack (object o)
+		{
+			using (MemoryStream ms = new MemoryStream ()) {
+				Pack (ms, o);
+				return ms.ToArray ();
+			}
+		}
+
+		public void Pack(Stream s, object o) {
+			if (o is sbyte)
+				Pack (s, (sbyte)o);
+			else if (o is byte)
+				Pack (s, (byte)o);
+			else if (o is short)
+				Pack (s, (short)o);
+			else if (o is ushort)
+				Pack (s, (ushort)o);
+			else if (o is int)
+				Pack (s, (int)o);
+			else if (o is uint)
+				Pack (s, (uint)o);
+			else if (o is long)
+				Pack (s, (long)o);
+			else if (o is ulong)
+				Pack (s, (ulong)o);
+		}
+
+		private void Pack(Stream s, sbyte val) {
+		}
+
+		private void Pack(Stream s, byte val) {
+			if (val <= 0x7f) {
+				s.WriteByte (val);
+			} else {
+				tmp0 [0] = 0xcc;
+				tmp0 [1] = val;
+				s.Write (tmp0, 0, 2);
+			}
+		}
+
+		private void Pack(Stream s, short val) {
+		}
+
+		private void Pack(Stream s, ushort val) {
+		}
+
+		private void Pack(Stream s, int val) {
+		}
+
+		private void Pack(Stream s, uint val) {
+		}
+
+		private void Pack(Stream s, long val) {
+		}
+
+		private void Pack(Stream s, ulong val) {
+		}
+
+
 		public object Unpack (byte[] buf, int offset, int size) {
 			using (MemoryStream ms = new MemoryStream (buf, offset, size)) {
 				return Unpack (ms);
