@@ -159,6 +159,36 @@ namespace MiniMessagePack
 		}
 
 		private void Pack(Stream s, long val) {
+			unchecked {
+				if (val >= 0) {
+					Pack (s, (ulong)val);
+				} else if (val >= -128) {
+					Pack (s, (sbyte)val);
+				} else if (val >= -0x8000) {
+					tmp0 [0] = 0xd1;
+					tmp0 [1] = (byte)(val >> 8);
+					tmp0 [2] = (byte)val;
+					s.Write (tmp0, 0, 3);
+				} else if (val >= -0x80000000) {
+					tmp0 [0] = 0xd2;
+					tmp0 [1] = (byte)(val >> 24);
+					tmp0 [2] = (byte)(val >> 16);
+					tmp0 [3] = (byte)(val >> 8);
+					tmp0 [4] = (byte)val;
+					s.Write (tmp0, 0, 5);
+				} else {
+					tmp0 [0] = (byte)(val >> 56);
+					tmp0 [1] = (byte)(val >> 48);
+					tmp0 [2] = (byte)(val >> 40);
+					tmp0 [3] = (byte)(val >> 32);
+					tmp0 [4] = (byte)(val >> 24);
+					tmp0 [5] = (byte)(val >> 16);
+					tmp0 [6] = (byte)(val >> 8);
+					tmp0 [7] = (byte)val;
+					s.WriteByte (0xd3);
+					s.Write (tmp0, 0, 8);
+				}
+			}
 		}
 
 		private void Pack(Stream s, ulong val) {
