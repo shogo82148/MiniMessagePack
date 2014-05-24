@@ -9,11 +9,28 @@ namespace MiniMessagePackTest
 	public class Test
 	{
 		[Test()]
+		[TestCase(0,    new byte[] {0x00})]
+		[TestCase(127,  new byte[] {0x7f})]
+		[TestCase(-1,   new byte[] {0xff})]
+		[TestCase(-32,  new byte[] {0xe0})]
+		[TestCase(-33,  new byte[] {0xd0, 0xdf})]
+		[TestCase(-128, new byte[] {0xd0, 0x80})]
+		public void PackSbyteValue(sbyte value, byte[] expected)
+		{
+			var packer = new MiniMessagePacker ();
+			var actual = packer.Pack ((object)value);
+			Assert.AreEqual (expected.Length, actual.Length, "length");
+			for (int i = 0; i < expected.Length; i++) {
+				Assert.AreEqual (expected [i], actual [i], "byte: " + i);
+			}
+		}
+
+		[Test()]
 		[TestCase(0, new byte[] {0x00})]
 		[TestCase(127, new byte[] {0x7f})]
 		[TestCase(128, new byte[] {0xcc, 0x80})]
 		[TestCase(255, new byte[] {0xcc, 0xff})]
-		public void PackIntegerValue(byte value, byte[] expected)
+		public void PackByteValue(byte value, byte[] expected)
 		{
 			var packer = new MiniMessagePacker ();
 			var actual = packer.Pack ((object)value);

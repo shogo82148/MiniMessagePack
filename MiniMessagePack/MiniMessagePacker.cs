@@ -67,6 +67,15 @@ namespace MiniMessagePack
 		}
 
 		private void Pack(Stream s, sbyte val) {
+			unchecked {
+				if (val >= -32) {
+					s.WriteByte ((byte)val);
+				} else {
+					tmp0 [0] = 0xd0;
+					tmp0 [1] = (byte)val;
+					s.Write (tmp0, 0, 2);
+				}
+			}
 		}
 
 		private void Pack(Stream s, byte val) {
