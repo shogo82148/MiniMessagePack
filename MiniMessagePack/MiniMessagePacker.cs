@@ -95,10 +95,8 @@ namespace MiniMessagePack
 				} else if (val >= -128) {
 					Pack (s, (sbyte)val);
 				} else {
-					tmp0 [0] = 0xd1;
-					tmp0 [1] = (byte)(val >> 8);
-					tmp0 [2] = (byte)val;
-					s.Write (tmp0, 0, 3);
+					s.WriteByte (0xd1);
+					Write (s, (ushort)val);
 				}
 			}
 		}
@@ -108,10 +106,8 @@ namespace MiniMessagePack
 				if (val < 0x100) {
 					Pack (s, (byte)val);
 				} else {
-					tmp0 [0] = 0xcd;
-					tmp0 [1] = (byte)(val >> 8);
-					tmp0 [2] = (byte)val;
-					s.Write (tmp0, 0, 3);
+					s.WriteByte (0xcd);
+					Write (s, (ushort)val);
 				}
 			}
 		}
@@ -123,17 +119,11 @@ namespace MiniMessagePack
 				} else if (val >= -128) {
 					Pack (s, (sbyte)val);
 				} else if (val >= -0x8000) {
-					tmp0 [0] = 0xd1;
-					tmp0 [1] = (byte)(val >> 8);
-					tmp0 [2] = (byte)val;
-					s.Write (tmp0, 0, 3);
+					s.WriteByte (0xd1);
+					Write (s, (ushort)val);
 				} else {
-					tmp0 [0] = 0xd2;
-					tmp0 [1] = (byte)(val >> 24);
-					tmp0 [2] = (byte)(val >> 16);
-					tmp0 [3] = (byte)(val >> 8);
-					tmp0 [4] = (byte)val;
-					s.Write (tmp0, 0, 5);
+					s.WriteByte (0xd2);
+					Write (s, (uint)val);
 				}
 			}
 		}
@@ -143,17 +133,11 @@ namespace MiniMessagePack
 				if (val < 0x100) {
 					Pack (s, (byte)val);
 				} else if (val < 0x10000) {
-					tmp0 [0] = 0xcd;
-					tmp0 [1] = (byte)(val >> 8);
-					tmp0 [2] = (byte)val;
-					s.Write (tmp0, 0, 3);
+					s.WriteByte (0xcd);
+					Write (s, (ushort)val);
 				} else {
-					tmp0 [0] = 0xce;
-					tmp0 [1] = (byte)(val >> 24);
-					tmp0 [2] = (byte)(val >> 16);
-					tmp0 [3] = (byte)(val >> 8);
-					tmp0 [4] = (byte)val;
-					s.Write (tmp0, 0, 5);
+					s.WriteByte (0xce);
+					Write (s, (uint)val);
 				}
 			}
 		}
@@ -165,28 +149,14 @@ namespace MiniMessagePack
 				} else if (val >= -128) {
 					Pack (s, (sbyte)val);
 				} else if (val >= -0x8000) {
-					tmp0 [0] = 0xd1;
-					tmp0 [1] = (byte)(val >> 8);
-					tmp0 [2] = (byte)val;
-					s.Write (tmp0, 0, 3);
+					s.WriteByte (0xd1);
+					Write (s, (ushort)val);
 				} else if (val >= -0x80000000) {
-					tmp0 [0] = 0xd2;
-					tmp0 [1] = (byte)(val >> 24);
-					tmp0 [2] = (byte)(val >> 16);
-					tmp0 [3] = (byte)(val >> 8);
-					tmp0 [4] = (byte)val;
-					s.Write (tmp0, 0, 5);
+					s.WriteByte (0xd2);
+					Write (s, (uint)val);
 				} else {
-					tmp0 [0] = (byte)(val >> 56);
-					tmp0 [1] = (byte)(val >> 48);
-					tmp0 [2] = (byte)(val >> 40);
-					tmp0 [3] = (byte)(val >> 32);
-					tmp0 [4] = (byte)(val >> 24);
-					tmp0 [5] = (byte)(val >> 16);
-					tmp0 [6] = (byte)(val >> 8);
-					tmp0 [7] = (byte)val;
 					s.WriteByte (0xd3);
-					s.Write (tmp0, 0, 8);
+					Write (s, (ulong)val);
 				}
 			}
 		}
@@ -196,32 +166,49 @@ namespace MiniMessagePack
 				if (val < 0x100) {
 					Pack (s, (byte)val);
 				} else if (val < 0x10000) {
-					tmp0 [0] = 0xcd;
-					tmp0 [1] = (byte)(val >> 8);
-					tmp0 [2] = (byte)val;
-					s.Write (tmp0, 0, 3);
+					s.WriteByte (0xcd);
+					Write (s, (ushort)val);
 				} else if (val < 0x100000000) {
-					tmp0 [0] = 0xce;
-					tmp0 [1] = (byte)(val >> 24);
-					tmp0 [2] = (byte)(val >> 16);
-					tmp0 [3] = (byte)(val >> 8);
-					tmp0 [4] = (byte)val;
-					s.Write (tmp0, 0, 5);
+					s.WriteByte (0xce);
+					Write (s, (uint)val);
 				} else {
-					tmp0 [0] = (byte)(val >> 56);
-					tmp0 [1] = (byte)(val >> 48);
-					tmp0 [2] = (byte)(val >> 40);
-					tmp0 [3] = (byte)(val >> 32);
-					tmp0 [4] = (byte)(val >> 24);
-					tmp0 [5] = (byte)(val >> 16);
-					tmp0 [6] = (byte)(val >> 8);
-					tmp0 [7] = (byte)val;
 					s.WriteByte (0xcf);
-					s.Write (tmp0, 0, 8);
+					Write (s, val);
 				}
 			}
 		}
 
+		private void Write(Stream s, ushort val) {
+			unchecked {
+				tmp0 [0] = (byte)(val >> 8);
+				tmp0 [1] = (byte)val;
+				s.Write (tmp0, 0, 2);
+			}
+		}
+
+		private void Write(Stream s, uint val) {
+			unchecked {
+				tmp0 [0] = (byte)(val >> 24);
+				tmp0 [1] = (byte)(val >> 16);
+				tmp0 [2] = (byte)(val >> 8);
+				tmp0 [3] = (byte)val;
+				s.Write (tmp0, 0, 4);
+			}
+		}
+
+		private void Write(Stream s, ulong val) {
+			unchecked {
+				tmp0 [0] = (byte)(val >> 56);
+				tmp0 [1] = (byte)(val >> 48);
+				tmp0 [2] = (byte)(val >> 40);
+				tmp0 [3] = (byte)(val >> 32);
+				tmp0 [4] = (byte)(val >> 24);
+				tmp0 [5] = (byte)(val >> 16);
+				tmp0 [6] = (byte)(val >> 8);
+				tmp0 [7] = (byte)val;
+				s.Write (tmp0, 0, 8);
+			}
+		}
 
 		public object Unpack (byte[] buf, int offset, int size) {
 			using (MemoryStream ms = new MemoryStream (buf, offset, size)) {
