@@ -235,6 +235,63 @@ namespace MiniMessagePackTest
 			}
 		}
 
+		[Test()]
+		[TestCase( new object[]{}, new byte[] { 0x90 }, "empty array" )]
+		[TestCase( new object[]{ 1 }, new byte[] { 0x91, 0x01 }, "length 1" )]
+		[TestCase( new object[]{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 }, 
+			new byte[] { 0x9f, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f }, "length 15" )]
+		[TestCase( new object[]{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 }, 
+			new byte[] { 0xdc, 0x00, 0x10, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10 }, "length 16" )]
+		public void PackArray(object[] array, byte[] expected, string message)
+		{
+			var packer = new MiniMessagePacker ();
+			var actual = packer.Pack (array);
+			Assert.AreEqual (expected.Length, actual.Length, message + ": length");
+			for (int i = 0; i < expected.Length; i++) {
+				Assert.AreEqual (expected [i], actual [i], message + ": [" + i + "]");
+			}
+		}
+
+		[Test()]
+		public void PackLongArray()
+		{
+			var array = new int[65535];
+			for (int i = 0; i < array.Length; i++) {
+				array [i] = 0x00;
+			}
+
+			var packer = new MiniMessagePacker ();
+			var actual = packer.Pack (array);
+			Assert.AreEqual (array.Length + 1 + 2, actual.Length);
+			Assert.AreEqual (0xdc, actual [0]);
+			Assert.AreEqual (0xff, actual [1]);
+			Assert.AreEqual (0xff, actual [2]);
+			for (int i = 0; i < array.Length; i++) {
+				Assert.AreEqual (0x00, actual [i + 1 + 2]);
+			}
+		}
+
+		[Test()]
+		public void PackVeryLongArray()
+		{
+			var array = new int[65536];
+			for (int i = 0; i < array.Length; i++) {
+				array [i] = 0x00;
+			}
+
+			var packer = new MiniMessagePacker ();
+			var actual = packer.Pack (array);
+			Assert.AreEqual (array.Length + 1 + 4, actual.Length);
+			Assert.AreEqual (0xdd, actual [0]);
+			Assert.AreEqual (0x00, actual [1]);
+			Assert.AreEqual (0x01, actual [2]);
+			Assert.AreEqual (0x00, actual [3]);
+			Assert.AreEqual (0x00, actual [4]);
+			for (int i = 0; i < array.Length; i++) {
+				Assert.AreEqual (0x00, actual [i + 1 + 4]);
+			}
+		}
+
 		[Test ()]
 		[TestCase(0,   new byte[] {0x00}, "min positive fixed int")]
 		[TestCase(127, new byte[] {0x7f}, "max positive fixed int")]

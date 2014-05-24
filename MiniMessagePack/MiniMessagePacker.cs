@@ -29,6 +29,7 @@ using System;
 using System.Text;
 using System.IO;
 using System.Collections.Generic;
+using System.Collections;
 
 namespace MiniMessagePack
 {
@@ -48,8 +49,11 @@ namespace MiniMessagePack
 		}
 
 		public void Pack(Stream s, object o) {
+			IList asList;
 			if (o == null)
 				PackNull (s);
+			else if ((asList = o as IList) != null)
+				Pack (s, asList);
 			else if (o is bool)
 				Pack (s, (bool)o);
 			else if (o is sbyte)
@@ -76,6 +80,22 @@ namespace MiniMessagePack
 
 		private void PackNull(Stream s) {
 			s.WriteByte (0xc0);
+		}
+
+		private void Pack (Stream s, IList list) {
+			int count = list.Count;
+			if (count < 16) {
+				s.WriteByte ((byte)(0x90 + count));
+			} else if (count < 0x10000) {
+				s.WriteByte (0xdc);
+				Write (s, (ushort)count);
+			} else {
+				s.WriteByte (0xdd);
+				Write (s, (uint)count);
+			}
+			foreach (object o in list) {
+				Pack (s, o);
+			}
 		}
 
 		private void Pack(Stream s, bool val) {
