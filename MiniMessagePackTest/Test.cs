@@ -131,6 +131,21 @@ namespace MiniMessagePackTest
 				Assert.AreEqual (expected [i], actual [i], message + "[" + i + "]");
 			}
 		}
+
+		[Test()]
+		[TestCase( new string[] {}, new object[] {}, new byte[] { 0x80 }, "fixed map")]
+		[TestCase( new string[] {"a", "b"}, new object[] {1, 2}, new byte[] { 0x82,                         0xa1, 0x61, 0x01, 0xa1, 0x62, 0x02 }, "fixed map")]
+		[TestCase( new string[] {"a", "b"}, new object[] {1, 2}, new byte[] { 0xde,             0x00, 0x02, 0xa1, 0x61, 0x01, 0xa1, 0x62, 0x02 }, "map16")]
+		[TestCase( new string[] {"a", "b"}, new object[] {1, 2}, new byte[] { 0xdf, 0x00, 0x00, 0x00, 0x02, 0xa1, 0x61, 0x01, 0xa1, 0x62, 0x02 }, "map32")]
+		public void MapValues(string[] keys, object[] values, byte[] data, string message)
+		{
+			var packer = new MiniMessagePacker ();
+			var actual = (Dictionary<string, object>)packer.Unpack (data);
+			Assert.AreEqual (keys.Length, actual.Count, message + ": count");
+			for(int i = 0; i < keys.Length; i++) {
+				Assert.AreEqual (values [i], actual [keys[i]], message + "[" + keys[i] + "]");
+			}
+		}
 	}
 }
 
