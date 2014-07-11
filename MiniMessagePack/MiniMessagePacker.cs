@@ -273,7 +273,7 @@ namespace MiniMessagePack
 
 		private void Pack(Stream s, string val) {
 			var bytes = encoder.GetBytes (val);
-			if (bytes.Length < 0x10) {
+			if (bytes.Length < 0x20) {
 				s.WriteByte ((byte)(0xa0 + bytes.Length));
 			} else if (bytes.Length < 0x100) {
 				s.WriteByte (0xd9);
