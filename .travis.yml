@@ -1,9 +1,14 @@
 ## Travis CI Integration
 
-language: c
+language: csharp
+solution: MiniMessagePack.sln
 
 install:
-  - sudo apt-get install mono-devel mono-gmcs nunit-console
+  - sudo apt-get install nunit-console
 script:
   - xbuild MiniMessagePack.sln
   - nunit-console MiniMessagePackTest/bin/Debug/MiniMessagePackTest.dll
+mono:
+  - latest
+  - 3.10.0
+  - 3.2.8
