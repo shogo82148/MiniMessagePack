@@ -45,7 +45,7 @@ var unpacked_data = new Dictionary<string, object> {
 };
 
 var packer = new MiniMessagePacker ();
-bytep[] msgpack = packer.Pack (unpacked_data);
+byte[] msgpack = packer.Pack (unpacked_data);
 // msgpack = new byte[] { 0x82, 0xa7, ...};
 ```
 
