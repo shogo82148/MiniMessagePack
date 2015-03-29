@@ -7,7 +7,7 @@ install:
   - sudo apt-get install nunit-console
 script:
   - xbuild MiniMessagePack.sln
-  - nunit-console4 MiniMessagePackTest/bin/Debug/MiniMessagePackTest.dll
+  - nunit-console MiniMessagePackTest/bin/Debug/MiniMessagePackTest.dll /framework=v4.5.1
 mono:
   - latest
   - 3.10.0
