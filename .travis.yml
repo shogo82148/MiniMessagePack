@@ -3,6 +3,8 @@
 language: csharp
 solution: MiniMessagePack.sln
 
+install:
+  - sudo apt-get install nunit-console
 script:
   - xbuild MiniMessagePack.sln
   - nunit-console MiniMessagePackTest/bin/Debug/MiniMessagePackTest.dll
