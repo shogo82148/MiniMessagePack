@@ -51,5 +51,5 @@ byte[] msgpack = packer.Pack (unpacked_data);
 
 ## See Also
 - [MessagePack](http://msgpack.org)
-- [MessagePack specification](MessagePack specification)
+- [MessagePack specification](https://github.com/msgpack/msgpack/blob/master/spec.md)
 - [MiniJSON](https://gist.github.com/darktable/1411710)
